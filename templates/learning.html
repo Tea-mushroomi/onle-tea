@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card gothic-card">
+    <h2 class="page-title">🧠 Статистика обучения</h2>
+    <p class="page-subtitle">Лайки добавляют удачные детали в промпты, дизлайки — убирают.</p>
+    <div class="learning-stats">
+        <div class="stat-card"><div class="stat-value">{{ learning.total_generations }}</div><div class="stat-label">Всего генераций</div></div>
+        <div class="stat-card stat-like"><div class="stat-value">{{ learning.total_likes }}</div><div class="stat-label">👍 Лайков</div></div>
+        <div class="stat-card stat-dislike"><div class="stat-value">{{ learning.total_dislikes }}</div><div class="stat-label">👎 Дизлайков</div></div>
+        <div class="stat-card stat-accuracy"><div class="stat-value">{{ "%.1f"|format(learning.accuracy * 100) }}%</div><div class="stat-label">Точность</div></div>
+    </div>
+    {% if learning.style_weights %}
+    <h3 style="color: var(--accent);">📊 Успешность стилей</h3>
+    <div class="style-weights">
+        {% for style, weight in learning.style_weights.items() %}
+        <div class="weight-item">
+            <span class="weight-name">{{ style }}</span>
+            <div class="weight-bar"><div class="weight-fill" style="width: {{ weight * 100 }}%"></div></div>
+            <span class="weight-value">{{ "%.0f"|format(weight * 100) }}%</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty">Пока нет данных. Оцените несколько генераций 👍/👎</p>
+    {% endif %}
+</div>
+{% endblock %}

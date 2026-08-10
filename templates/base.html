@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏛️ Реставратор фасадов</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body data-theme="gothic">
+
+<!-- 🪙🍵 Счётчик в правом верхнем углу -->
+<div class="corner-badge" title="hamstercoin · чайные пакетики">
+    <span>🪙 <b id="coin-num">0</b></span>
+    <span class="tb">{% if teabag_img %}<img src="{{ teabag_img }}" class="teabag-img" alt="🍵">{% else %}🍵{% endif %} <b id="tea-num">0</b></span>
+</div>
+
+<!-- ⚙️ Кнопка настроек -->
+<button class="settings-btn" id="settings-btn" title="Настройки">⚙️</button>
+<div class="settings-panel" id="settings-panel">
+    <h4>⚙️ Настройки</h4>
+    <div class="set-row">Тема:
+        <button class="theme-btn" data-theme="gothic">🌙</button>
+        <button class="theme-btn" data-theme="mint">🍵</button>
+        <button class="theme-btn" data-theme="light">☀️</button>
+    </div>
+    <label class="set-row"><input type="checkbox" id="sound-on" checked> 🔊 Звук</label>
+    <button class="btn btn-secondary" id="reset-coins" style="width:100%">♻️ Сбросить валюту</button>
+</div>
+
+<div class="stars-container" id="stars"></div>
+<div class="fireflies">
+    <div class="firefly" style="top: 20%; left: 15%;"></div>
+    <div class="firefly" style="top: 60%; left: 80%; animation-delay: 2s;"></div>
+    <div class="firefly" style="top: 40%; left: 50%; animation-delay: 4s;"></div>
+    <div class="firefly" style="top: 75%; left: 25%; animation-delay: 1s;"></div>
+</div>
+
+<!-- 🐹 Оверлей генерации -->
+<div class="loading-overlay" id="loading-overlay">
+    <div class="loading-box">
+        <div class="hamster-wheel">
+            <div class="wheel"></div>
+            <div class="hamster" id="hamster" title="Тапай меня!">🐹</div>
+        </div>
+        <div class="loading-text">🐹 Хомяк бежит по колесу... генерируем здание!</div>
+        <div class="loading-hint">Тапай хомяка — получай hamstercoin 🪙</div>
+    </div>
+</div>
+
+<!-- 🫖 Модалка чайника -->
+<div class="teapot-modal" id="teapot-modal">
+    <div class="teapot-box">
+        <button class="lightbox-close" onclick="closeTeapot()">×</button>
+        <div id="teapot-visual" style="font-size:100px">🫖</div>
+        <h2>418 — Я чайник!</h2>
+        <p>+1 🍵 чайный пакетик!</p>
+        <button class="btn gothic-btn" onclick="playTeapotSound()">🔊 Звук</button>
+    </div>
+</div>
+
+<header class="hero">
+    <div class="gothic-arch"><h1>🏛️ Реставратор фасадов</h1></div>
+    <p class="subtitle">Восстановление облика здания с помощью ИИ</p>
+    <div class="badges">
+        <span class="badge">🐍 Python 3.13/3.14</span>
+        <span class="badge">🎨 {{ styles|length }} стилей</span>
+        <span class="badge">📁 Датасет: {{ dataset_stats.images }}</span>
+        <span class="badge">🧠 Точность {{ "%.0f"|format(learning.accuracy * 100) }}%</span>
+    </div>
+</header>
+
+<nav class="topnav">
+    <a class="nav-btn {{ 'active' if page == 'index' }}" href="/">📝 Генерация</a>
+    <a class="nav-btn {{ 'active' if page == 'restore' }}" href="/restore">🔨 Реставратор</a>
+    <a class="nav-btn {{ 'active' if page == 'gallery' }}" href="/gallery">🖼️ Галерея</a>
+    <a class="nav-btn {{ 'active' if page == 'learning' }}" href="/learning">🧠 Обучение</a>
+    <a class="nav-btn {{ 'active' if page == 'about' }}" href="/about">ℹ️ О проекте</a>
+</nav>
+
+<main class="container">
+    {% if error %}<div class="alert alert-error">❌ {{ error }}</div>{% endif %}
+    {% if notice %}<div class="alert alert-success">✅ {{ notice }}</div>{% endif %}
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+    <div class="footer-grid">
+        <div class="footer-col"><h4>🏛️ Реставратор фасадов</h4><p>Python-сервер с ИИ для архитектуры.</p></div>
+        <div class="footer-col"><h4>Статистика</h4>
+            <p>Генераций: {{ learning.total_generations }} · 👍 {{ learning.total_likes }} · 👎 {{ learning.total_dislikes }}</p>
+            <p>Точность: {{ "%.1f"|format(learning.accuracy * 100) }}%</p></div>
+        <div class="footer-col"><h4>Датасет</h4><p>Стилей: {{ dataset_stats.styles }}</p><p>Примеров: {{ dataset_stats.images }}</p></div>
+        <div class="footer-col"><h4>Технологии</h4><p>Python 3.13/3.14 · Flask · Horde</p>
+            <a class="teapot-link" href="/teapot" id="teapot-link" title="...">
+                {% if teapot_img %}<img src="{{ teapot_img }}" alt="🫖" class="teapot-img">{% else %}🫖{% endif %}
+            </a></div>
+    </div>
+    <div class="footer-bottom"><p>© {{ year }} Реставратор фасадов · 🪙 hamstercoin · 🍵 пакетики</p></div>
+</footer>
+
+<script>
+const TEAPOT_SND = "{{ teapot_snd or '' }}";
+const TEAPOT_IMG = "{{ teapot_img or '' }}";
+let soundOn = localStorage.getItem('sound_on') !== '0';
+
+// ===== 🪙 Валюты =====
+let hamstercoin = parseInt(localStorage.getItem('hamstercoin') || '0', 10);
+let teabags     = parseInt(localStorage.getItem('teabags')     || '0', 10);
+function updateNums() {
+    document.getElementById('coin-num').textContent = hamstercoin;
+    document.getElementById('tea-num').textContent = teabags;
+}
+function spawnAround(el, text) {
+    const r = el.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const ang = Math.random() * 2 * Math.PI, rad = r.width / 2 + 12 + Math.random() * 22;
+    const e = document.createElement('div');
+    e.className = 'coin-plus'; e.textContent = text;
+    e.style.left = (cx + Math.cos(ang) * rad) + 'px';
+    e.style.top  = (cy + Math.sin(ang) * rad) + 'px';
+    document.body.appendChild(e); setTimeout(() => e.remove(), 1600);
+}
+const ham = document.getElementById('hamster');
+ham.addEventListener('click', (e) => {
+    e.stopPropagation();
+    ham.classList.remove('tap'); void ham.offsetWidth; ham.classList.add('tap');
+    hamstercoin++; localStorage.setItem('hamstercoin', hamstercoin);
+    updateNums(); spawnAround(ham, '+1 🪙'); spawnAround(ham, '✨');
+});
+
+// ===== 🫖 Чайник =====
+function whistle() {
+    if (!soundOn) return;
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(880, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + .4);
+        g.gain.setValueAtTime(.0001, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(.3, ctx.currentTime + .05);
+        g.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime + 1.2);
+        o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 1.3);
+    } catch (e) {}
+}
+function playTeapotSound() {
+    if (!soundOn) return;
+    if (TEAPOT_SND) { const a = new Audio(TEAPOT_SND); a.play().catch(() => {}); }
+    whistle();
+}
+function openTeapot() {
+    if (TEAPOT_IMG) document.getElementById('teapot-visual').innerHTML =
+        '<img src="' + TEAPOT_IMG + '" style="max-width:200px;border-radius:20px">';
+    document.getElementById('teapot-modal').classList.add('active');
+    teabags++; localStorage.setItem('teabags', teabags); updateNums();
+    playTeapotSound();
+}
+function closeTeapot() { document.getElementById('teapot-modal').classList.remove('active'); }
+document.getElementById('teapot-link').addEventListener('click', (e) => {
+    e.preventDefault(); openTeapot(); logAction('🫖 чайник найден');
+});
+
+// ===== ⚙️ Настройки =====
+const panel = document.getElementById('settings-panel');
+document.getElementById('settings-btn').addEventListener('click', (e) => {
+    e.stopPropagation(); panel.classList.toggle('open');
+});
+document.addEventListener('click', (e) => {
+    if (!panel.contains(e.target) && e.target.id !== 'settings-btn') panel.classList.remove('open');
+});
+const sndBox = document.getElementById('sound-on');
+sndBox.checked = soundOn;
+sndBox.addEventListener('change', () => {
+    soundOn = sndBox.checked; localStorage.setItem('sound_on', soundOn ? '1' : '0');
+});
+document.getElementById('reset-coins').addEventListener('click', () => {
+    hamstercoin = 0; teabags = 0;
+    localStorage.setItem('hamstercoin', 0); localStorage.setItem('teabags', 0);
+    updateNums();
+});
+
+// ===== Темы =====
+function setTheme(t) {
+    document.body.dataset.theme = t; localStorage.setItem('theme', t);
+    document.querySelectorAll('.theme-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.theme === t));
+}
+document.querySelectorAll('.theme-btn').forEach(b =>
+    b.addEventListener('click', () => setTheme(b.dataset.theme)));
+
+// ===== 🎬 Плавные переходы =====
+document.querySelectorAll('.nav-btn').forEach(a => a.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.body.classList.add('page-leave');
+    setTimeout(() => { location.href = a.href; }, 450);
+}));
+
+// ===== Звёзды =====
+const starsBox = document.getElementById('stars');
+for (let i = 0; i < 9; i++) {
+    const s = document.createElement('div');
+    s.className = 'star'; s.style.left = (5 + i * 10) + '%';
+    s.style.animationDelay = (i * 0.8) + 's'; starsBox.appendChild(s);
+}
+
+// ===== 🐹 Хомяк при отправке форм =====
+document.querySelectorAll('form[action="/generate"], form[action="/restore"]').forEach(f =>
+    f.addEventListener('submit', () =>
+        document.getElementById('loading-overlay').classList.add('active')));
+
+// ===== 📄 Лог каждого нажатия =====
+function logAction(a) {
+    fetch('/log_action', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: a }) }).catch(() => {});
+}
+document.addEventListener('click', (e) => {
+    const el = e.target.closest('a, button');
+    if (el) logAction('клик: ' + ((el.textContent || '').trim().slice(0, 40) || el.getAttribute('href') || 'кнопка'));
+});
+document.addEventListener('submit', (e) => logAction('форма: ' + (e.target.getAttribute('action') || '')));
+
+// ===== Ripple =====
+document.addEventListener('click', (e) => {
+    const b = e.target.closest('.btn, .nav-btn, .btn-like, .btn-dislike');
+    if (!b) return;
+    const r = document.createElement('span'); r.className = 'ripple';
+    const rect = b.getBoundingClientRect(); const size = Math.max(rect.width, rect.height);
+    r.style.width = r.style.height = size + 'px';
+    r.style.left = (e.clientX - rect.left - size / 2) + 'px';
+    r.style.top  = (e.clientY - rect.top - size / 2) + 'px';
+    b.appendChild(r); setTimeout(() => r.remove(), 1000);
+});
+
+setTheme(localStorage.getItem('theme') || 'gothic');
+updateNums();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

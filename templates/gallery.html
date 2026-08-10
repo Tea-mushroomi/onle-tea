@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="page-title">🖼️ Галерея генераций</h2>
+{% if gallery %}
+<div style="margin-bottom: 20px;">
+    <form method="POST" action="/delete_all" onsubmit="return confirm('Удалить ВСЕ генерации?');">
+        <button type="submit" class="btn-delete" style="max-width: 320px;">🗑️ Удалить ВСЕ ({{ gallery|length }})</button>
+    </form>
+</div>
+<div class="gallery-grid">
+    {% for item in gallery %}
+    <div class="gallery-item">
+        <img src="/gallery/{{ item.file }}" alt="{{ item.style }}" onclick="openLightbox({{ loop.index0 }})">
+        <div class="gallery-item-meta"><span class="time">{{ item.time }}</span><span class="style">{{ item.style }}</span></div>
+        <form method="POST" action="/delete" class="gallery-item-actions">
+            <input type="hidden" name="file" value="{{ item.file }}">
+            <button type="submit" class="btn-delete">🗑️ Удалить</button>
+        </form>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="empty">Галерея пуста. Создайте первую генерацию!</p>
+{% endif %}
+
+<div class="lightbox" id="lightbox">
+    <div class="lightbox-content">
+        <button class="lightbox-close" onclick="closeLightbox()">×</button>
+        <img src="" alt="" id="lb-img">
+        <div class="lightbox-meta" id="lb-meta"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const galleryData = {{ gallery | tojson | safe }};
+function openLightbox(idx) {
+    const item = galleryData[idx];
+    if (!item) return;
+    document.getElementById('lb-img').src = '/gallery/' + item.file;
+    document.getElementById('lb-meta').innerHTML = `
+        <div><strong>Стиль:</strong> ${item.style}</div>
+        <div><strong>Время:</strong> ${item.time}</div>
+        <div><strong>Движок:</strong> ${item.engine || ''}</div>
+        <pre>${item.prompt || ''}</pre>`;
+    document.getElementById('lightbox').classList.add('active');
+}
+function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
+document.getElementById('lightbox').addEventListener('click', e => { if (e.target.id === 'lightbox') closeLightbox(); });
+</script>
+{% endblock %}

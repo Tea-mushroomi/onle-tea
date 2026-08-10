@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card gothic-card">
+    <h2 class="page-title">🔨 Реставратор: из фото → целое здание</h2>
+    <p class="page-subtitle">Загрузите фото — Horde достроит целое здание, а не просто обработает кадр.</p>
+    <form method="POST" action="/restore" enctype="multipart/form-data">
+        <div class="form-grid">
+            <div class="form-group full-width"><label>📷 Фото здания или фрагмент</label>
+                <input type="file" name="file" accept="image/*" required class="file-input"></div>
+            <div class="form-group"><label>🏛️ Целевой стиль</label>
+                <select name="style">{% for s in styles %}<option>{{ s }}</option>{% endfor %}</select></div>
+            <div class="form-group"><label>🔧 Режим</label>
+                <select name="mode"><option value="img2img" selected>🎯 Достроить (img2img)</option><option value="outpainting">📐 Расширить (outpainting)</option></select></div>
+            <div class="form-group"><label>🌱 Seed (0 = случайный)</label>
+                <input type="number" name="seed" value="0" min="0"></div>
+            <div class="form-group full-width"><label>✍️ Подсказка</label>
+                <textarea name="description" rows="3" placeholder="Старинный особняк XIX века, кирпичный..."></textarea></div>
+        </div>
+        <div class="actions"><button type="submit" class="btn gothic-btn">🔨 Восстановить здание</button></div>
+        <p class="hint">⏳ Реставрация через AI Horde · 1–5 мин</p>
+    </form>
+
+    {% if result %}
+    <div class="result">
+        <img src="{{ result.image }}" alt="Результат">
+        <div class="result-meta">
+            <div><strong>Движок:</strong> {{ result.engine }}</div>
+            <details><summary>📋 Промпт</summary><pre>{{ result.prompt }}</pre></details>
+            <div class="result-actions">
+                <a class="btn btn-secondary" href="{{ result.image }}" download>⬇️ Скачать</a>
+                <form method="POST" action="/feedback" class="feedback-form">
+                    <input type="hidden" name="image_id" value="{{ result.id }}">
+                    <button type="submit" name="rating" value="like" class="btn-like">👍 Верно</button>
+                    <button type="submit" name="rating" value="dislike" class="btn-dislike">👎 Ошибка</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

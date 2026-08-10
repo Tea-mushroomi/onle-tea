@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card gothic-card">
+    <h2 class="page-title">📝 Генерация по описанию</h2>
+    <form method="POST" action="/generate">
+        <div class="form-grid">
+            <div class="form-group"><label>🏛️ Стиль</label>
+                <select name="style">{% for s in styles %}<option>{{ s }}</option>{% endfor %}</select></div>
+            <div class="form-group"><label>🎯 Задача</label>
+                <select name="task"><option value="facade">🏛️ Фасад (3:4)</option><option value="plan">📐 Планировка (1:1)</option></select></div>
+            <div class="form-group"><label>🤖 Модель</label>
+                <select name="model"><option value="turbo" selected>⚡ turbo</option><option value="flux">🎨 flux</option><option value="sana">🏆 sana</option></select></div>
+            <div class="form-group"><label>🌱 Seed (0 = случайный)</label>
+                <input type="number" name="seed" value="0" min="0"></div>
+            <div class="form-group full-width"><label>✍️ Описание здания</label>
+                <textarea name="description" rows="4" required placeholder="Пятиэтажный дом 1950-х, арочные окна, лепнина..."></textarea></div>
+            <div class="form-group full-width"><label class="checkbox-label">
+                <input type="checkbox" name="internet_search" checked> 🔍 Умный режим</label></div>
+        </div>
+        <div class="actions"><button type="submit" class="btn gothic-btn">✨ Сгенерировать</button></div>
+    </form>
+
+    {% if result %}
+    <div class="result">
+        <img src="{{ result.image }}" alt="Результат">
+        <div class="result-meta">
+            <div><strong>Движок:</strong> {{ result.engine }}</div>
+            <div><strong>Размер:</strong> {{ result.width }}×{{ result.height }}</div>
+            <details><summary>📋 Промпт</summary><pre>{{ result.prompt }}</pre></details>
+            <div class="result-actions">
+                <a class="btn btn-secondary" href="{{ result.image }}" download>⬇️ Скачать</a>
+                <form method="POST" action="/feedback" class="feedback-form">
+                    <input type="hidden" name="image_id" value="{{ result.id }}">
+                    <button type="submit" name="rating" value="like" class="btn-like">👍 Верно</button>
+                    <button type="submit" name="rating" value="dislike" class="btn-dislike">👎 Ошибка</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

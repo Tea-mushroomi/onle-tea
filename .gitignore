@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+.env
+keys.json
+gallery/
+dataset/
+offline/
+offline_images/
+history.json
+learning.json
+*.log
