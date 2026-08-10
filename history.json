@@ -1,0 +1,28 @@
+[
+  {
+    "mode": "text",
+    "task": "facade",
+    "prompt": "architectural photograph of a building, house, gothic cathedral, pointed arches, flying buttresses, tall spires, building only, facade view, architecture only, building exterior only, facade, no people, no humans, no animals, no cars, no food, no interior, no objects, no text, no watermark",
+    "style": "Готика",
+    "engine": "pollinations",
+    "seed": 331828,
+    "description_ru": "дом",
+    "model": "sana",
+    "id": "20260810_123247_574156",
+    "time": "10.08.2026 12:32:47",
+    "file": "20260810_123247_574156.png"
+  },
+  {
+    "mode": "text",
+    "task": "facade",
+    "prompt": "architectural photograph of a building, house, gothic revival, pointed arches, rose window, grey stone, spires, building only, facade view, architecture only, building exterior only, facade, no people, no humans, no animals, no cars, no food, no interior, no objects, no text, no watermark",
+    "style": "Неоготика",
+    "engine": "pollinations",
+    "seed": 385609,
+    "description_ru": "дом",
+    "model": "turbo",
+    "id": "20260810_121520_973724",
+    "time": "10.08.2026 12:15:20",
+    "file": "20260810_121520_973724.png"
+  }
+]
